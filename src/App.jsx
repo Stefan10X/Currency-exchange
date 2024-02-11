@@ -1,6 +1,8 @@
+/* eslint-disable no-unused-vars */
+import axios from "axios";
+
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
-import apininjas from "./api/apininjas";
 import logo from "./logo.png";
 import CommonValues from "./CommonValues";
 
@@ -66,26 +68,36 @@ const App = () => {
 
   const [amount, setAmount] = useState("1");
   const [currency1, setCurrency1] = useState("RON");
-  const [currency2, setCurrency2] = useState("USD");
+  const [currency2, setCurrency2] = useState("EUR");
   const [result, setResult] = useState("");
+  const [cammount, setCammount] = useState("");
+  const [cammount2, setCammount2] = useState("");
   const [swap, setSwap] = useState(false);
   const [common1, setCommon1] = useState("RON");
   const [common2, setCommon2] = useState("EUR");
-  const [camount, setCamont] = useState("");
 
   useEffect(() => {
     const convert = async () => {
-      const response = await apininjas.get("/convertcurrency", {
-        params: {
-          have: currency1,
-          want: currency2,
-          amount: amount,
-        },
-      });
-      setResult(response.data.new_amount);
-      setCommon1(response.data.old_currency);
-      setCommon2(response.data.new_currency);
-      setCamont(response.data.old_amount);
+      const response = await axios.get(
+        "https://v6.exchangerate-api.com/v6/86e34e011c24402f7c4840da/latest/ALL"
+      );
+      setResult(
+        (amount * response.data.conversion_rates[currency2]) /
+          response.data.conversion_rates[currency1]
+      );
+
+      setCammount(
+        response.data.conversion_rates[currency2] /
+          response.data.conversion_rates[currency1]
+      );
+
+      setCammount2(
+        response.data.conversion_rates[currency1] /
+          response.data.conversion_rates[currency2]
+      );
+
+      setCommon1(currency1);
+      setCommon2(currency2);
     };
 
     if (swap === true) {
@@ -101,7 +113,7 @@ const App = () => {
         if (amount) {
           convert();
         }
-      }, 500);
+      }, 1000);
       return () => {
         clearTimeout(timeoutId);
       };
@@ -181,11 +193,11 @@ const App = () => {
 
           <div className="text-2xl w-full relative left-4 lg:text-4xl lg:left-32">
             <p>
-              {camount.toLocaleString("en", { useGrouping: true })} {common1} =
+              {amount.toLocaleString("en", { useGrouping: true })} {currency1} =
             </p>
             <p>
               <strong>
-                {result.toLocaleString("en", { useGrouping: true })} {common2}
+                {result.toLocaleString("en", { useGrouping: true })} {currency2}
               </strong>
             </p>
           </div>
@@ -202,16 +214,8 @@ const App = () => {
         </div>
       </div>
       <div className="mb-12 lg:w-[1040px] mx-auto lg:grid lg:grid-cols-2 lg:gap-10  ">
-        <CommonValues
-          common1={common1}
-          common2={common2}
-          result={result / camount}
-        />
-        <CommonValues
-          common1={common2}
-          common2={common1}
-          result={camount / result}
-        />
+        <CommonValues common1={common1} common2={common2} result={cammount} />
+        <CommonValues common1={common2} common2={common1} result={cammount2} />
       </div>
     </div>
   );
